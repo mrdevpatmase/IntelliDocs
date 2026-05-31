@@ -1,4 +1,5 @@
 
+from services.retriever import create_faiss_index
 from services.embeddings import create_embeddings
 from services.chunker import chunk_text
 from services.pdf_processor import extract_text_from_pdf
@@ -46,13 +47,13 @@ def upload_pdf():
     extracted_text = extract_text_from_pdf(filepath)
     chunks = chunk_text(extracted_text)
     embeddings = create_embeddings(chunks)
-
+    create_faiss_index(embeddings)
+    
     return jsonify({
     "message": "PDF uploaded successfully",
-    "filename": filename,
-    "characters_extracted": len(extracted_text),
     "total_chunks": len(chunks),
-    "embedding_shape": list(embeddings.shape)
+    "embedding_shape": list(embeddings.shape),
+    "faiss_vectors": embeddings.shape[0]
 })
 
 if __name__ == "__main__":
