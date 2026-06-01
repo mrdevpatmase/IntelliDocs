@@ -1,4 +1,9 @@
 
+from services.embeddings import create_query_embedding
+from services.retriever import (
+    search_chunks,
+    get_relevant_chunks
+)
 from services.retriever import create_faiss_index
 from services.embeddings import create_embeddings
 from services.chunker import chunk_text
@@ -47,7 +52,7 @@ def upload_pdf():
     extracted_text = extract_text_from_pdf(filepath)
     chunks = chunk_text(extracted_text)
     embeddings = create_embeddings(chunks)
-    create_faiss_index(embeddings)
+    create_faiss_index(embeddings, chunks)
     
     return jsonify({
     "message": "PDF uploaded successfully",
@@ -55,6 +60,29 @@ def upload_pdf():
     "embedding_shape": list(embeddings.shape),
     "faiss_vectors": embeddings.shape[0]
 })
+
+@app.route("/ask", methods=["POST"])
+def ask_question():
+
+    data = request.get_json()
+
+    question = data.get("question")
+
+    if not question:
+        return jsonify({
+            "error": "Question is required"
+        }), 400
+
+    query_embedding = create_query_embedding(question)
+
+    indices = search_chunks(query_embedding)
+
+    chunks = get_relevant_chunks(indices)
+
+    return jsonify({
+        "question": question,
+        "retrieved_chunks": chunks
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
