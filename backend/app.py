@@ -1,4 +1,4 @@
-
+from services.llm import generate_answer
 from services.embeddings import create_query_embedding
 from services.retriever import (
     search_chunks,
@@ -79,10 +79,17 @@ def ask_question():
 
     chunks = get_relevant_chunks(indices)
 
+    context = "\n\n".join(chunks)
+
+    answer = generate_answer(
+    question,
+    context
+)
+
     return jsonify({
-        "question": question,
-        "retrieved_chunks": chunks
-    })
+    "question": question,
+    "answer": answer
+})
 
 if __name__ == "__main__":
     app.run(debug=True)
