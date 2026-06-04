@@ -1,6 +1,8 @@
 from services.llm import generate_answer
 from services.embeddings import create_query_embedding
 from services.retriever import (
+    save_index,
+    load_index,
     search_chunks,
     get_relevant_chunks
 )
@@ -13,6 +15,8 @@ import os
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+load_index()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,6 +57,8 @@ def upload_pdf():
     chunks = chunk_text(extracted_text)
     embeddings = create_embeddings(chunks)
     create_faiss_index(embeddings, chunks)
+    save_index()
+
     
     return jsonify({
     "message": "PDF uploaded successfully",
