@@ -18,12 +18,15 @@ Information not found in the document.
 """
 
     response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "phi3",
-            "prompt": prompt,
-            "stream": False
+    "http://localhost:11434/api/generate",
+    json={
+        "model": "phi3",
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0
         }
-    )
+    }
+)
 
     return response.json()["response"]

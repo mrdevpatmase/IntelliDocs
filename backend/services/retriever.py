@@ -1,5 +1,3 @@
-# services/retriever.py
-
 import faiss
 import numpy as np
 import pickle
@@ -7,6 +5,7 @@ import os
 
 index = None
 stored_chunks = []
+
 
 def create_faiss_index(
     embeddings,
@@ -16,23 +15,47 @@ def create_faiss_index(
     global index
     global stored_chunks
 
-    stored_chunks = chunks
-
-    dimension = embeddings.shape[1]
-
-    index = faiss.IndexFlatL2(
-        dimension
+    embeddings = np.array(
+        embeddings,
+        dtype=np.float32
     )
 
-    index.add(
-        np.array(
-            embeddings,
-            dtype=np.float32
+    if index is None:
+
+        print(">>> Creating NEW index")
+
+        dimension = embeddings.shape[1]
+
+        index = faiss.IndexFlatL2(
+            dimension
         )
-    )
+
+        index.add(
+            embeddings
+        )
+
+        stored_chunks = chunks
+
+    else:
+
+        print(">>> Adding to EXISTING index")
+
+        index.add(
+            embeddings
+        )
+
+        stored_chunks.extend(
+            chunks
+        )
+
+    print(">>> Total vectors:", index.ntotal)
+    print(">>> Total chunks:", len(stored_chunks))
 
 
-def search_chunks(query_embedding, k=3):
+def search_chunks(
+    query_embedding,
+    k=3
+):
 
     global index
 
@@ -42,18 +65,25 @@ def search_chunks(query_embedding, k=3):
         )
 
     distances, indices = index.search(
-        np.array([query_embedding], dtype=np.float32),
+        np.array(
+            [query_embedding],
+            dtype=np.float32
+        ),
         k
     )
 
     return indices[0]
+
 
 def save_index():
 
     global index
     global stored_chunks
 
-    os.makedirs("vector_store", exist_ok=True)
+    os.makedirs(
+        "vector_store",
+        exist_ok=True
+    )
 
     faiss.write_index(
         index,
@@ -69,6 +99,7 @@ def save_index():
             stored_chunks,
             f
         )
+
 
 def load_index():
 
@@ -89,11 +120,20 @@ def load_index():
         "rb"
     ) as f:
 
-        stored_chunks = pickle.load(f)
+        stored_chunks = pickle.load(
+            f
+        )
 
     return True
 
-def get_relevant_chunks(indices):
+
+def get_relevant_chunks(
+    indices
+):
+
     global stored_chunks
 
-    return [stored_chunks[i] for i in indices]
+    return [
+        stored_chunks[i]
+        for i in indices
+    ]
