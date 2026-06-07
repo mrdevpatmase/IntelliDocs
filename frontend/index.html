@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliDocs</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+
+            <div class="logo">
+                <h2>📄 IntelliDocs</h2>
+                <p>AI Research Assistant</p>
+            </div>
+
+            <button class="upload-btn" onclick="document.getElementById('pdfFile').click()">
+                + Upload PDF
+            </button>
+
+            <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf"
+                hidden
+            >
+
+            <div class="documents-section">
+                <h3>Documents</h3>
+
+                <div id="documentsList">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main">
+
+            <div class="header">
+                <h1>IntelliDocs</h1>
+                <p>Chat with your documents</p>
+            </div>
+
+            <div id="chatContainer" class="chat-container">
+
+                <div class="welcome-message">
+                    <h2>Welcome to IntelliDocs</h2>
+                    <p>
+                        Upload PDFs and ask questions about them.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="input-area">
+
+                <textarea
+                    id="questionInput"
+                    placeholder="Ask anything about your PDFs..."
+                ></textarea>
+
+                <button id="sendBtn">
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
+
