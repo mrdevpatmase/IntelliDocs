@@ -88,3 +88,4 @@ dist/
 tmp/
 temp/
 *.tmp
+index.faiss
