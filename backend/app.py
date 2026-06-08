@@ -1,3 +1,4 @@
+from flask_cors import CORS
 from services.llm import generate_answer
 from services.embeddings import (
     create_query_embedding,
@@ -19,6 +20,7 @@ from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 loaded = load_index()
 print("Index loaded:", loaded)
