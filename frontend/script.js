@@ -35,8 +35,13 @@ async function loadDocuments() {
             div.className =
                 "document-card";
 
+            const displayName =
+                doc.length > 25
+                ? doc.substring(0, 25) + "..."
+                : doc;
+
             div.innerHTML =
-                `📄 ${doc}`;
+                `📄 ${displayName}`;
 
             documentsList.appendChild(div);
 
@@ -93,7 +98,7 @@ async function uploadPDF() {
         const data =
             await response.json();
 
-        alert(
+        console.log(
             `${data.document} uploaded successfully`
         );
 
@@ -105,10 +110,6 @@ async function uploadPDF() {
 
         console.error(error);
 
-        alert(
-            "Upload failed"
-        );
-
     }
 
 }
@@ -119,6 +120,13 @@ async function uploadPDF() {
 // ==========================
 
 function addUserMessage(text){
+
+    const hero =
+        document.querySelector(".hero");
+
+    if(hero){
+        hero.remove();
+    }
 
     const wrapper =
         document.createElement("div");
@@ -160,11 +168,18 @@ function showTyping(){
     typing.innerHTML =
     `
         <div class="ai-bubble">
-            <div class="typing">
-                <span></span>
-                <span></span>
-                <span></span>
+
+            <div>
+                Thinking...
+
+                <div class="typing">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
             </div>
+
         </div>
     `;
 
