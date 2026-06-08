@@ -9,11 +9,15 @@ def create_query_embedding(query):
 
 def create_embeddings(chunks):
 
-    texts = [
-        chunk["text"]
-        for chunk in chunks
-    ]
+    if isinstance(
+        chunks[0],
+        dict
+    ):
+        texts = [
+            chunk["text"]
+            for chunk in chunks
+        ]
+    else:
+        texts = chunks
 
-    embeddings = model.encode(texts)
-
-    return embeddings
+    return model.encode(texts)

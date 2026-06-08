@@ -1,4 +1,4 @@
-def chunk_text(pages, chunk_size=500, overlap=100):
+def chunk_text(pages, chunk_size=1000, overlap=200):
 
     chunks = []
 

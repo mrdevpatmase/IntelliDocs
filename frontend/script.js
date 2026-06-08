@@ -41,7 +41,30 @@ async function loadDocuments() {
                 : doc;
 
             div.innerHTML =
-                `📄 ${displayName}`;
+            `
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+            ">
+
+                <span>
+                    📄 ${displayName}
+                </span>
+
+                <span
+                    style="
+                        cursor:pointer;
+                        color:#ff4d4d;
+                        font-size:18px;
+                    "
+                    onclick="deleteDocument('${doc}')"
+                >
+                    🗑
+                </span>
+
+            </div>
+            `;
 
             documentsList.appendChild(div);
 
@@ -108,7 +131,67 @@ async function uploadPDF() {
 
     catch(error){
 
-        console.error(error);
+        console.error(
+            "Upload Error:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==========================
+// Delete Document
+// ==========================
+
+async function deleteDocument(document){
+
+    const confirmDelete =
+        confirm(
+            `Delete ${document}?`
+        );
+
+    if(!confirmDelete){
+        return;
+    }
+
+    try{
+
+        const response =
+            await fetch(
+                `${API_URL}/delete-document`,
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "application/json"
+                    },
+
+                    body:JSON.stringify({
+                        document
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(
+            data.message
+        );
+
+        loadDocuments();
+
+    }
+
+    catch(error){
+
+        console.error(
+            "Delete Error:",
+            error
+        );
 
     }
 

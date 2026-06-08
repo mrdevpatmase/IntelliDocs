@@ -1,3 +1,5 @@
+from multiprocessing import context
+
 from flask_cors import CORS
 from services.llm import generate_answer
 from services.embeddings import (
@@ -117,6 +119,18 @@ def ask_question():
         for chunk in chunks
     )
 
+    print("\nQUESTION:")
+    print(question)
+
+    print("\nRETRIEVED CHUNKS:")
+
+    for i, chunk in enumerate(chunks):
+
+        print(f"\n--- CHUNK {i+1} ---")
+        print("Document:", chunk["document"])
+        print("Page:", chunk["page"])
+        print(chunk["text"][:500])
+
     answer = generate_answer(
         question,
         context
@@ -161,6 +175,37 @@ def list_documents():
     return jsonify({
         "documents": unique_docs,
         "total_documents": len(unique_docs)
+    })
+
+
+@app.route("/delete-document", methods=["POST"])
+def delete_document():
+
+    data = request.get_json()
+
+    document_name = data.get("document")
+
+    if not document_name:
+        return jsonify({
+            "error": "Document name required"
+        }), 400
+
+    # Delete from FAISS + metadata
+    retriever.delete_document(
+        document_name
+    )
+
+    # Delete actual PDF file
+    filepath = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        document_name
+    )
+
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    return jsonify({
+        "message": f"{document_name} deleted successfully"
     })
 
 if __name__ == "__main__":

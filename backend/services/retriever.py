@@ -54,7 +54,7 @@ def create_faiss_index(
 
 def search_chunks(
     query_embedding,
-    k=3
+    k=15
 ):
 
     global index
@@ -137,3 +137,74 @@ def get_relevant_chunks(
         stored_chunks[i]
         for i in indices
     ]
+
+
+def delete_document(document_name):
+
+    global stored_chunks
+    global index
+
+    # Remove document chunks
+    stored_chunks = [
+
+        chunk
+
+        for chunk in stored_chunks
+
+        if chunk["document"] != document_name
+
+    ]
+
+    # No documents left
+    if len(stored_chunks) == 0:
+
+        index = None
+
+        if os.path.exists(
+            "vector_store/index.faiss"
+        ):
+            os.remove(
+                "vector_store/index.faiss"
+            )
+
+        if os.path.exists(
+            "vector_store/metadata.pkl"
+        ):
+            os.remove(
+                "vector_store/metadata.pkl"
+            )
+
+        return
+
+    # Recreate embeddings
+    from services.embeddings import (
+        create_embeddings
+    )
+
+    texts = [
+
+        chunk["text"]
+
+        for chunk in stored_chunks
+
+    ]
+
+    embeddings = create_embeddings(
+        texts
+    )
+
+    # Rebuild index
+    dimension = embeddings.shape[1]
+
+    index = faiss.IndexFlatL2(
+        dimension
+    )
+
+    index.add(
+        np.array(
+            embeddings,
+            dtype=np.float32
+        )
+    )
+
+    save_index()
