@@ -1,5 +1,5 @@
 from multiprocessing import context
-
+from flask import send_from_directory
 from flask_cors import CORS
 from services.llm import generate_answer
 from services.embeddings import (
@@ -207,6 +207,15 @@ def delete_document():
     return jsonify({
         "message": f"{document_name} deleted successfully"
     })
+
+
+@app.route("/pdf/<filename>")
+def serve_pdf(filename):
+
+    return send_from_directory(
+        app.config["UPLOAD_FOLDER"],
+        filename
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

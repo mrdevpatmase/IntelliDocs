@@ -4,21 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliDocs</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="app">
 
+    <!-- Sidebar -->
     <aside class="sidebar">
 
         <div class="brand">
+
             <h2>📄 IntelliDocs</h2>
+
             <p>
                 Research. Summarize.
                 <br>
                 Discover.
             </p>
+
         </div>
 
         <button
@@ -39,45 +44,71 @@
 
             <h3>Your Documents</h3>
 
-            <div id="documentsList">
-
-            </div>
+            <div id="documentsList"></div>
 
         </div>
 
     </aside>
 
+    <!-- Main Content -->
     <main class="main">
 
-        <div
-            id="chatContainer"
-            class="chat-container"
-        >
+        <div class="content-wrapper">
 
-            <div class="hero">
+            <!-- Chat Section -->
+            <div class="chat-section">
 
-                <h1>IntelliDocs</h1>
+                <div
+                    id="chatContainer"
+                    class="chat-container"
+                >
 
-                <p>
-                    Chat with your PDFs using AI.
-                </p>
+                    <div class="hero">
+
+                        <h1>IntelliDocs</h1>
+
+                        <p>
+                            Chat with your PDFs using AI.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="input-wrapper">
+
+                    <div class="input-box">
+
+                        <textarea
+                            id="questionInput"
+                            placeholder="Ask anything about your documents..."
+                        ></textarea>
+
+                        <button id="sendBtn">
+                            ➜
+                        </button>
+
+                    </div>
+
+                </div>
 
             </div>
 
-        </div>
+            <!-- PDF Preview Panel -->
+            <div class="pdf-panel">
 
-        <div class="input-wrapper">
+                <div class="pdf-header">
 
-            <div class="input-box">
+                    <h3>
+                        PDF Preview
+                    </h3>
 
-                <textarea
-                    id="questionInput"
-                    placeholder="Ask anything about your documents..."
-                ></textarea>
+                </div>
 
-                <button id="sendBtn">
-                    ➜
-                </button>
+                <iframe
+                    id="pdfViewer"
+                    src=""
+                ></iframe>
 
             </div>
 

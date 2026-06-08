@@ -323,10 +323,20 @@ function addAIMessage(
 
             sourcesHTML +=
             `
-                <div class="source-item">
-                    📄 ${source.document}
-                    • Page ${source.page}
-                </div>
+            <div
+                class="source-item"
+                onclick="
+                    previewPDF(
+                        '${source.document}',
+                        ${source.page}
+                    )
+                "
+            >
+
+            📄 ${source.document}
+            • Page ${source.page}
+
+            </div>
             `;
 
         });
@@ -469,3 +479,20 @@ function scrollToBottom(){
 // ==========================
 
 loadDocuments();
+
+
+
+function previewPDF(
+    document,
+    page
+){
+
+    const viewer =
+        document.getElementById(
+            "pdfViewer"
+        );
+
+    viewer.src =
+        `${API_URL}/pdf/${document}#page=${page}`;
+
+}
