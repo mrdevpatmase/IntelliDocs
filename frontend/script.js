@@ -4,11 +4,16 @@ const pdfFile = document.getElementById("pdfFile");
 const chatContainer = document.getElementById("chatContainer");
 const sendBtn = document.getElementById("sendBtn");
 const questionInput = document.getElementById("questionInput");
-let chatHistory = [];
+let conversations = [];
+let currentConversation = null;
 
 // ==========================
 // Load Documents
 // ==========================
+
+document.getElementById(
+    "newChatBtn"
+)
 
 async function loadDocuments() {
 
@@ -368,6 +373,70 @@ function addAIMessage(
 }
 
 
+function renderHistory(){
+
+    const historyList =
+        document.getElementById(
+            "historyList"
+        );
+
+    historyList.innerHTML = "";
+
+    conversations.forEach(
+        conversation => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "history-item";
+
+            div.innerHTML =
+`
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+    <span>
+        ${conversation.title}
+    </span>
+
+    <span
+        style="
+        color:#ff4d4d;
+        cursor:pointer;
+        font-size:16px;
+        "
+        onclick="
+        event.stopPropagation();
+        deleteConversation(${conversation.id})
+        "
+    >
+        🗑
+    </span>
+
+</div>
+`;
+
+            div.onclick =
+            () => openConversation(
+                conversation.id
+            );
+
+            historyList.appendChild(
+                div
+            );
+
+        }
+    );
+
+}
+
+
 // ==========================
 // Ask Question
 // ==========================
@@ -376,6 +445,15 @@ async function askQuestion(){
 
     const question =
         questionInput.value.trim();
+
+        if(
+        currentConversation.messages.length === 0
+        ){
+
+        currentConversation.title =
+        question.substring(0,40);
+
+        }
 
     if(!question){
         return;
@@ -416,10 +494,24 @@ async function askQuestion(){
             data.sources
         );
 
-        saveHistory(
-            question,
-            data.answer
-        );
+        currentConversation.messages.push({
+
+            role:"user",
+
+            content:question
+
+        });
+
+        currentConversation.messages.push({
+
+            role:"assistant",
+
+            content:data.answer
+
+        });
+
+        saveConversations();
+        renderHistory();
 
     }
 
@@ -484,7 +576,18 @@ function scrollToBottom(){
 // ==========================
 
 loadDocuments();
-loadHistory();
+
+loadConversations();
+
+if(
+    conversations.length === 0
+){
+
+    createNewChat();
+
+}
+
+renderHistory();
 
 
 
@@ -539,109 +642,208 @@ function closePreview(){
 }
 
 
-function saveHistory(
-    question,
-    answer
-){
 
-    const chat = {
+function createNewChat(){
 
-        question,
-        answer,
+    currentConversation = {
 
-        timestamp:
-            new Date()
-            .toLocaleString()
+        id: Date.now(),
+
+        title: "New Chat",
+
+        messages: []
 
     };
 
-    chatHistory.unshift(
-        chat
+    conversations.unshift(
+        currentConversation
     );
 
-    localStorage.setItem(
-        "intellidocs_history",
-        JSON.stringify(
-            chatHistory
-        )
-    );
-
-    renderHistory();
+    saveConversations();
 
 }
 
+document
+.getElementById("newChatBtn")
+.addEventListener(
+    "click",
+    () => {
 
-function renderHistory(){
+        createNewChat();
 
-    const historyList =
-        document.getElementById(
-            "historyList"
-        );
-
-    historyList.innerHTML = "";
-
-    chatHistory
-    .slice(0,10)
-    .forEach(chat => {
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-        div.className =
-            "history-item";
-
-        div.innerHTML =
+        chatContainer.innerHTML =
         `
-        <strong>
-        ${chat.question.substring(0,40)}
-        </strong>
-
-        <br>
-
-        <small>
-        ${chat.timestamp}
-        </small>
+        <div class="hero">
+            <h1>IntelliDocs</h1>
+            <p>Chat with your PDFs using AI.</p>
+        </div>
         `;
 
-        div.onclick =
-        () => {
+    }
+);
 
+conversation.messages.forEach(
+    message => {
+
+        if(
+            message.role === "user"
+        ){
             addUserMessage(
-                chat.question
+                message.content
             );
+        }
+
+        else{
 
             addAIMessage(
-                chat.answer,
+                message.content,
                 []
             );
 
-        };
+        }
 
-        historyList.appendChild(
-            div
-        );
+    }
+);
 
-    });
+
+function saveConversations(){
+
+    localStorage.setItem(
+        "intellidocs_conversations",
+        JSON.stringify(conversations)
+    );
 
 }
 
-
-function loadHistory(){
+function loadConversations(){
 
     const saved =
         localStorage.getItem(
-            "intellidocs_history"
+            "intellidocs_conversations"
         );
 
     if(saved){
 
-        chatHistory =
+        conversations =
             JSON.parse(saved);
 
-        renderHistory();
+        if(conversations.length > 0){
+
+            currentConversation =
+                conversations[0];
+
+        }
 
     }
+
+}
+
+
+function openConversation(id){
+
+    currentConversation =
+        conversations.find(
+            c => c.id === id
+        );
+
+    chatContainer.innerHTML = "";
+
+    currentConversation.messages.forEach(
+        message => {
+
+            if(
+                message.role === "user"
+            ){
+
+                addUserMessage(
+                    message.content
+                );
+
+            }
+
+            else{
+
+                addAIMessage(
+                    message.content,
+                    []
+                );
+
+            }
+
+        }
+    );
+
+}
+
+currentConversation.messages.push({
+
+    role:"assistant",
+
+    content:data.answer,
+
+    sources:data.sources
+
+});
+
+addAIMessage(
+    message.content,
+    message.sources || []
+);
+
+function deleteConversation(id){
+
+    const confirmDelete =
+        confirm(
+            "Delete this chat?"
+        );
+
+    if(!confirmDelete){
+        return;
+    }
+
+    conversations =
+        conversations.filter(
+            c => c.id !== id
+        );
+
+    saveConversations();
+
+    if(
+        currentConversation &&
+        currentConversation.id === id
+    ){
+
+        if(
+            conversations.length > 0
+        ){
+
+            currentConversation =
+                conversations[0];
+
+            openConversation(
+                currentConversation.id
+            );
+
+        }
+
+        else{
+
+            createNewChat();
+
+            chatContainer.innerHTML =
+            `
+            <div class="hero">
+                <h1>IntelliDocs</h1>
+                <p>
+                Chat with your PDFs using AI.
+                </p>
+            </div>
+            `;
+
+        }
+
+    }
+
+    renderHistory();
 
 }

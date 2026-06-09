@@ -484,3 +484,28 @@ textarea::placeholder{
     border-top:1px solid rgba(255,255,255,.1);
     margin:20px 0;
 }
+
+.history-item{
+
+    position:relative;
+
+    padding:12px;
+
+    background:rgba(255,255,255,.04);
+
+    border:1px solid rgba(255,255,255,.06);
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+}
+
+.history-item:hover{
+
+    border-color:#7c5cfc;
+
+    background:rgba(124,92,252,.08);
+
+}
