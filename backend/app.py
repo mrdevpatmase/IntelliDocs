@@ -116,18 +116,41 @@ def ask_question():
         query_embedding
     )
 
+    print("\n===== SEARCH RESULTS =====")
+
+    for d, idx in zip(distances, indices):
+
+        chunk = retriever.stored_chunks[idx]
+
+        print(
+            f"Distance: {d:.4f}"
+        )
+
+        print(
+            f"Document: {chunk['document']}"
+        )
+
+        print(
+            f"Page: {chunk['page']}"
+        )
+
+        print(
+            chunk['text'][:200]
+        )
+
+        print("-" * 50)
+
+
     chunks = []
 
-    for d, idx in zip(
-        distances,
-        indices
-    ):
+    for d, idx in zip(distances, indices):
 
-        if d < 1.2:
-
+        if d < 1.15:
             chunks.append(
                 retriever.stored_chunks[idx]
             )
+
+    chunks = chunks[:3]
 
     context = ""
 
