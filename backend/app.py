@@ -74,6 +74,11 @@ def upload_pdf():
     # Metadata-aware chunking
     chunks = chunk_text(pages)
 
+    for chunk in chunks:
+        print(
+        chunk["document"],
+        chunk["page"]
+    )
     # Add document name to every chunk
     for chunk in chunks:
         chunk["document"] = filename
@@ -114,10 +119,16 @@ def ask_question():
 
     chunks = get_relevant_chunks(indices)
 
-    context = "\n\n".join(
-        chunk["text"]
-        for chunk in chunks
-    )
+    context = ""
+
+    for chunk in chunks:
+
+        context += f"""
+    Document: {chunk['document']}
+    Page: {chunk['page']}
+
+    {chunk['text']}
+    """
 
     print("\nQUESTION:")
     print(question)
