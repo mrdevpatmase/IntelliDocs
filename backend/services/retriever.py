@@ -54,7 +54,7 @@ def create_faiss_index(
 
 def search_chunks(
     query_embedding,
-    k=8
+    k=10
 ):
 
     global index
@@ -72,7 +72,7 @@ def search_chunks(
         k
     )
 
-    return indices[0]
+    return distances[0], indices[0]
 
 
 def save_index():

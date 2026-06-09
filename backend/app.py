@@ -1,3 +1,4 @@
+from fileinput import filename
 from multiprocessing import context
 from flask import send_from_directory
 from flask_cors import CORS
@@ -74,14 +75,10 @@ def upload_pdf():
     # Metadata-aware chunking
     chunks = chunk_text(pages)
 
-    for chunk in chunks:
-        print(
-        chunk["document"],
-        chunk["page"]
-    )
-    # Add document name to every chunk
+    # Add document name
     for chunk in chunks:
         chunk["document"] = filename
+
 
     embeddings = create_embeddings(chunks)
 
@@ -115,9 +112,22 @@ def ask_question():
 
     query_embedding = create_query_embedding(question)
 
-    indices = search_chunks(query_embedding)
+    distances, indices = search_chunks(
+        query_embedding
+    )
 
-    chunks = get_relevant_chunks(indices)
+    chunks = []
+
+    for d, idx in zip(
+        distances,
+        indices
+    ):
+
+        if d < 1.2:
+
+            chunks.append(
+                retriever.stored_chunks[idx]
+            )
 
     context = ""
 
@@ -166,6 +176,8 @@ def ask_question():
                 "document": chunk["document"],
                 "page": chunk["page"]
             })
+
+    sources = sources[:3]
 
     return jsonify({
         "question": question,

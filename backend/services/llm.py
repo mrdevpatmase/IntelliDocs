@@ -6,17 +6,18 @@ def generate_answer(question, context):
     prompt = f"""
 You are a document QA assistant.
 
-STRICT RULES:
+Rules:
 
-- Use ONLY information explicitly present in the context.
-- NEVER infer.
-- NEVER estimate.
-- NEVER assume.
-- NEVER use outside knowledge.
-- If a value is not explicitly written in the context, say:
-  "Information not found in the document."
+- Use ONLY the provided context.
+- Never infer.
+- Never estimate.
+- Never use outside knowledge.
+- If information is missing, reply:
+  Information not found in the document.
 - Answer in bullet points.
-- Maximum 6 bullet points.
+- Maximum 4 bullet points.
+- Each bullet must be under 20 words.
+- Include exact values when available.
 
 Context:
 {context}
@@ -25,7 +26,7 @@ Question:
 {question}
 
 Answer:
-""" 
+"""
 
     response = requests.post(
         "http://localhost:11434/api/generate",
