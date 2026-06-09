@@ -209,13 +209,27 @@ def delete_document():
     })
 
 
+from flask import send_from_directory, make_response
+
+
 @app.route("/pdf/<filename>")
 def serve_pdf(filename):
 
-    return send_from_directory(
-        app.config["UPLOAD_FOLDER"],
-        filename
+    response = make_response(
+        send_from_directory(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
     )
+
+    response.headers.pop(
+        "X-Frame-Options",
+        None
+    )
+
+    response.headers["Access-Control-Allow-Origin"] = "*"
+
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)

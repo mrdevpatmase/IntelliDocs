@@ -4,7 +4,7 @@ const pdfFile = document.getElementById("pdfFile");
 const chatContainer = document.getElementById("chatContainer");
 const sendBtn = document.getElementById("sendBtn");
 const questionInput = document.getElementById("questionInput");
-
+let chatHistory = [];
 
 // ==========================
 // Load Documents
@@ -253,7 +253,7 @@ function showTyping(){
         <div class="ai-bubble">
 
             <div>
-                Thinking...
+                
 
                 <div class="typing">
                     <span></span>
@@ -416,6 +416,11 @@ async function askQuestion(){
             data.sources
         );
 
+        saveHistory(
+            question,
+            data.answer
+        );
+
     }
 
     catch(error){
@@ -479,20 +484,164 @@ function scrollToBottom(){
 // ==========================
 
 loadDocuments();
+loadHistory();
 
 
 
 function previewPDF(
-    document,
+    fileName,
     page
 ){
+
+    const panel =
+        document.getElementById(
+            "pdfPanel"
+        );
 
     const viewer =
         document.getElementById(
             "pdfViewer"
         );
 
-    viewer.src =
-        `${API_URL}/pdf/${document}#page=${page}`;
+    panel.classList.add(
+        "active"
+    );
+
+    viewer.src = "";
+
+    setTimeout(() => {
+
+        viewer.src =
+            `${API_URL}/pdf/${encodeURIComponent(fileName)}?t=${Date.now()}#page=${page}`;
+
+    }, 100);
+
+}
+
+function closePreview(){
+
+    const panel =
+        document.getElementById(
+            "pdfPanel"
+        );
+
+    const viewer =
+        document.getElementById(
+            "pdfViewer"
+        );
+
+    panel.classList.remove(
+        "active"
+    );
+
+    viewer.src = "";
+
+}
+
+
+function saveHistory(
+    question,
+    answer
+){
+
+    const chat = {
+
+        question,
+        answer,
+
+        timestamp:
+            new Date()
+            .toLocaleString()
+
+    };
+
+    chatHistory.unshift(
+        chat
+    );
+
+    localStorage.setItem(
+        "intellidocs_history",
+        JSON.stringify(
+            chatHistory
+        )
+    );
+
+    renderHistory();
+
+}
+
+
+function renderHistory(){
+
+    const historyList =
+        document.getElementById(
+            "historyList"
+        );
+
+    historyList.innerHTML = "";
+
+    chatHistory
+    .slice(0,10)
+    .forEach(chat => {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className =
+            "history-item";
+
+        div.innerHTML =
+        `
+        <strong>
+        ${chat.question.substring(0,40)}
+        </strong>
+
+        <br>
+
+        <small>
+        ${chat.timestamp}
+        </small>
+        `;
+
+        div.onclick =
+        () => {
+
+            addUserMessage(
+                chat.question
+            );
+
+            addAIMessage(
+                chat.answer,
+                []
+            );
+
+        };
+
+        historyList.appendChild(
+            div
+        );
+
+    });
+
+}
+
+
+function loadHistory(){
+
+    const saved =
+        localStorage.getItem(
+            "intellidocs_history"
+        );
+
+    if(saved){
+
+        chatHistory =
+            JSON.parse(saved);
+
+        renderHistory();
+
+    }
 
 }
