@@ -1,32 +1,45 @@
 import requests
 
-
 def generate_answer(question, context):
 
     prompt = f"""
-You are a document QA assistant.
+    You are an expert document question-answering assistant.
 
-Rules:
+    STRICT RULES:
 
-- Use ONLY the provided context.
-- Never infer.
-- Never estimate.
-- Never use outside knowledge.
-- If information is missing, reply:
-  Information not found in the document.
-- Answer in bullet points.
-- Maximum 4 bullet points.
-- Each bullet must be under 20 words.
-- Include exact values when available.
+    1. Use ONLY information present in the context.
+    2. Never use outside knowledge.
+    3. Never estimate.
+    4. Never hallucinate.
+    5. Never invent values.
+    6. If the answer is not present in the context, reply exactly:
+    Information not found in the document.
 
-Context:
-{context}
+    ANSWER RULES:
 
-Question:
-{question}
+    1. Answer in bullet points.
+    2. Maximum 4 bullet points.
+    3. Keep answers concise.
+    4. Use exact values from the context.
+    5. Do not explain your reasoning.
+    6. Do not mention the context unless asked.
 
-Answer:
-"""
+    TABLE RULES:
+
+    1. The context may contain tables converted into plain text.
+    2. When table headers and row values are present, map values according to their column order.
+    3. If a value exists in a table row, return it.
+    4. Do not say information is missing if the value is clearly present in a table.
+    5. Use only explicitly available values.
+
+    CONTEXT:
+    {context}
+
+    QUESTION:
+    {question}
+
+    ANSWER:
+    """
 
     response = requests.post(
         "http://localhost:11434/api/generate",
@@ -36,7 +49,8 @@ Answer:
             "stream": False,
             "options": {
                 "temperature": 0,
-                "num_predict": 100
+                "num_predict": 100,
+                "top_p": 0.1
             }
         }
     )

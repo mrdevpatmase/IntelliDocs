@@ -105,6 +105,10 @@ def ask_question():
 
     question = data.get("question")
 
+    elected_document = data.get(
+    "document"
+)
+
     if not question:
         return jsonify({
             "error": "Question is required"
@@ -174,6 +178,10 @@ def ask_question():
         print("Document:", chunk["document"])
         print("Page:", chunk["page"])
         print(chunk["text"][:500])
+
+    print("\n===== CONTEXT =====")
+    print(context)
+    print("===================")
 
     answer = generate_answer(
         question,
