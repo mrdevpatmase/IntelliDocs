@@ -11,6 +11,11 @@ let currentConversation = null;
 // Load Documents
 // ==========================
 
+const selectedDocument =
+    document.getElementById(
+        "selectedDocument"
+    );
+
 document.getElementById(
     "newChatBtn"
 )
@@ -32,7 +37,28 @@ async function loadDocuments() {
 
         documentsList.innerHTML = "";
 
+        selectedDocument.innerHTML =
+        `
+        <option value="">
+            All Documents
+        </option>
+        `;
+
         data.documents.forEach(doc => {
+
+        
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = doc;
+
+        option.textContent = doc;
+
+        selectedDocument.appendChild(
+            option
+        );
 
             const div =
                 document.createElement("div");
@@ -174,9 +200,13 @@ async function deleteDocument(document){
                         "application/json"
                     },
 
-                    body:JSON.stringify({
-                        document
-                    })
+                    body: JSON.stringify({
+
+                        question,
+
+                        document:
+                            selectedDocument.value
+})
                 }
             );
 

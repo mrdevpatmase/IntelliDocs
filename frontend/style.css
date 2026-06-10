@@ -509,3 +509,29 @@ textarea::placeholder{
     background:rgba(124,92,252,.08);
 
 }
+
+.document-selector{
+
+    max-width:900px;
+    margin:0 auto 12px auto;
+
+}
+
+#selectedDocument{
+
+    width:100%;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:#111827;
+
+    color:white;
+
+    border:1px solid rgba(255,255,255,.1);
+
+    outline:none;
+
+    cursor:pointer;
+}
