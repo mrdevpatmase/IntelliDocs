@@ -127,6 +127,8 @@ def ask_question():
     data = request.get_json()
 
     question = data.get("question")
+    selected_document = data.get("document")
+    print("Selected Document:", selected_document)
 
     if not question:
         return jsonify({
@@ -166,14 +168,21 @@ def ask_question():
 
     chunks = []
 
+    chunks = []
+
     for d, idx in zip(distances, indices):
 
-        if d < 1.15:
-            chunks.append(
-                retriever.stored_chunks[idx]
-            )
+        chunk = retriever.stored_chunks[idx]
 
-    chunks = chunks[:3]
+        # Filter by selected PDF
+        if selected_document and \
+        chunk["document"] != selected_document:
+            continue
+
+        if d < 1.15:
+            chunks.append(chunk)
+
+        chunks = chunks[:3]
 
     context = ""
 

@@ -2,5 +2,9 @@
     {
         "username": "dev",
         "password": "scrypt:32768:8:1$Odfl3qQP0cJWHquX$76c0cdf1fec75f73031b1fe6b0d4bc61dd26eb0c566923e4e2a117de5d7c95eb52b8c05d054464bcac24b7608de049781b5bf37dbfaf3751fb34c9bf588d9a9b"
+    },
+    {
+        "username": "mrdevpatmase",
+        "password": "scrypt:32768:8:1$wbXQLpX5kWMqBj2r$4d79863596951a80195d2d5ead61b90bb95fe9d71e2454d6a80e894bfd7cb4a94a9c33c4ff134bcadd476c573beb0238534b3e484826464eae9bcb789a199cd5"
     }
 ]
