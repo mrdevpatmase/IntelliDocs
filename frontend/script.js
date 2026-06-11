@@ -30,12 +30,31 @@ document.getElementById(
     "newChatBtn"
 )
 
+
+function getAuthHeaders() {
+
+    const token =
+        localStorage.getItem("token");
+
+    return {
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${token}`
+    };
+
+}
+
 async function loadDocuments() {
 
     try {
 
         const response = await fetch(
-            `${API_URL}/documents`
+            `${API_URL}/documents`,
+            {
+                headers:{
+                    "Authorization":
+                    `Bearer ${localStorage.getItem("token")}`
+                }
+            }
         );
 
         const data = await response.json();
@@ -137,10 +156,14 @@ async function loadDocuments() {
 // Upload PDF
 // ==========================
 
-pdfFile.addEventListener(
-    "change",
-    uploadPDF
-);
+if(pdfFile){
+
+    pdfFile.addEventListener(
+        "change",
+        uploadPDF
+    );
+
+}
 
 async function uploadPDF() {
 
@@ -166,9 +189,13 @@ async function uploadPDF() {
                 `${API_URL}/upload`,
                 {
                     method:"POST",
+                    headers:{
+                        "Authorization":
+                        `Bearer ${localStorage.getItem("token")}`
+                    },
                     body:formData
                 }
-            );
+            )
 
         const data =
             await response.json();
@@ -216,10 +243,7 @@ async function deleteDocument(document){
                 {
                     method:"POST",
 
-                    headers:{
-                        "Content-Type":
-                        "application/json"
-                    },
+                    headers:getAuthHeaders(),
 
                     body: JSON.stringify({
                         document
@@ -536,10 +560,7 @@ async function askQuestion(){
                 `${API_URL}/ask`,
                 {
                     method:"POST",
-                    headers:{
-                        "Content-Type":
-                        "application/json"
-                    },
+                    headers:getAuthHeaders(),
                     body:JSON.stringify({
                         question
                     })
@@ -599,12 +620,19 @@ async function askQuestion(){
 // Send Button
 // ==========================
 
-document
-.getElementById("clearChatBtn")
-.addEventListener(
-    "click",
-    clearCurrentChat
+const clearChatBtn =
+document.getElementById(
+    "clearChatBtn"
 );
+
+if(clearChatBtn){
+
+    clearChatBtn.addEventListener(
+        "click",
+        clearCurrentChat
+    );
+
+}
 
 sendBtn.addEventListener(
     "click",
