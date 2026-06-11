@@ -16,6 +16,16 @@ const selectedDocument =
         "selectedDocument"
     );
 
+if(selectedDocument){
+
+    selectedDocument.innerHTML = `
+        <option value="">
+            All Documents
+        </option>
+    `;
+
+}
+
 document.getElementById(
     "newChatBtn"
 )
@@ -201,12 +211,8 @@ async function deleteDocument(document){
                     },
 
                     body: JSON.stringify({
-
-                        question,
-
-                        document:
-                            selectedDocument.value
-})
+                        document
+                    })
                 }
             );
 
@@ -474,16 +480,20 @@ align-items:center;
 async function askQuestion(){
 
     const question =
-        questionInput.value.trim();
+    questionInput.value.trim();
 
-        if(
+    if(!question){
+        return;
+    }
+
+    if(
         currentConversation.messages.length === 0
-        ){
+    ){
 
         currentConversation.title =
-        question.substring(0,40);
+            question.substring(0,40);
 
-        }
+    }
 
     if(!question){
         return;
@@ -534,11 +544,13 @@ async function askQuestion(){
 
         currentConversation.messages.push({
 
-            role:"assistant",
+    role:"assistant",
 
-            content:data.answer
+    content:data.answer,
 
-        });
+    sources:data.sources
+
+});
 
         saveConversations();
         renderHistory();
@@ -564,6 +576,13 @@ async function askQuestion(){
 // ==========================
 // Send Button
 // ==========================
+
+document
+.getElementById("clearChatBtn")
+.addEventListener(
+    "click",
+    clearCurrentChat
+);
 
 sendBtn.addEventListener(
     "click",
@@ -701,6 +720,8 @@ document
 
         createNewChat();
 
+        renderHistory();
+
         chatContainer.innerHTML =
         `
         <div class="hero">
@@ -712,28 +733,6 @@ document
     }
 );
 
-conversation.messages.forEach(
-    message => {
-
-        if(
-            message.role === "user"
-        ){
-            addUserMessage(
-                message.content
-            );
-        }
-
-        else{
-
-            addAIMessage(
-                message.content,
-                []
-            );
-
-        }
-
-    }
-);
 
 
 function saveConversations(){
@@ -795,7 +794,7 @@ function openConversation(id){
 
                 addAIMessage(
                     message.content,
-                    []
+                    message.sources || []
                 );
 
             }
@@ -805,20 +804,6 @@ function openConversation(id){
 
 }
 
-currentConversation.messages.push({
-
-    role:"assistant",
-
-    content:data.answer,
-
-    sources:data.sources
-
-});
-
-addAIMessage(
-    message.content,
-    message.sources || []
-);
 
 function deleteConversation(id){
 
@@ -876,4 +861,44 @@ function deleteConversation(id){
 
     renderHistory();
 
+}
+
+function clearCurrentChat(){
+
+    if(
+        !currentConversation
+    ){
+        return;
+    }
+
+    const confirmClear =
+        confirm(
+            "Clear current conversation?"
+        );
+
+    if(!confirmClear){
+        return;
+    }
+
+    currentConversation.messages = [];
+
+    currentConversation.title =
+        "New Chat";
+
+    saveConversations();
+
+    renderHistory();
+
+    chatContainer.innerHTML =
+    `
+    <div class="hero">
+
+        <h1>IntelliDocs</h1>
+
+        <p>
+            Chat with your PDFs using AI.
+        </p>
+
+    </div>
+    `;
 }
