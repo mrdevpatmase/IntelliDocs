@@ -11,6 +11,18 @@ let currentConversation = null;
 // Load Documents
 // ==========================
 
+const token =
+    localStorage.getItem(
+        "token"
+    );
+
+if(!token){
+
+    window.location.href =
+        "login.html";
+
+}
+
 const selectedDocument =
     document.getElementById(
         "selectedDocument"
@@ -562,7 +574,8 @@ async function askQuestion(){
                     method:"POST",
                     headers:getAuthHeaders(),
                     body:JSON.stringify({
-                        question
+                        question,
+                        document: selectedDocument.value
                     })
                 }
             );
@@ -783,8 +796,6 @@ document
     }
 );
 
-
-
 function saveConversations(){
 
     localStorage.setItem(
@@ -816,7 +827,6 @@ function loadConversations(){
     }
 
 }
-
 
 function openConversation(id){
 
@@ -927,6 +937,27 @@ function deleteConversation(id){
     }
 
     renderHistory();
+
+}
+
+const logoutBtn =
+document.getElementById("logoutBtn");
+
+if(logoutBtn){
+
+    logoutBtn.addEventListener(
+        "click",
+        () => {
+
+            localStorage.removeItem("token");
+
+            localStorage.removeItem("username");
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
 
 }
 
