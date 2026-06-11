@@ -47,6 +47,17 @@ async function loadDocuments() {
 
         documentsList.innerHTML = "";
 
+        if(data.documents.length === 0){
+
+        documentsList.innerHTML = `
+        <div class="empty-state">
+            No PDFs uploaded yet
+        </div>
+        `;
+
+        return;
+    }
+
         selectedDocument.innerHTML =
         `
         <option value="">
@@ -418,6 +429,17 @@ function renderHistory(){
 
     historyList.innerHTML = "";
 
+    if(conversations.length === 0){
+
+    historyList.innerHTML = `
+    <div class="empty-state">
+        No chats yet
+    </div>
+    `;
+
+    return;
+}
+
     conversations.forEach(
         conversation => {
 
@@ -776,6 +798,23 @@ function openConversation(id){
         );
 
     chatContainer.innerHTML = "";
+
+    if(currentConversation.messages.length === 0){
+
+    chatContainer.innerHTML = `
+    <div class="hero">
+
+        <h1>IntelliDocs</h1>
+
+        <p>
+            Start a new conversation
+        </p>
+
+    </div>
+    `;
+
+    return;
+}
 
     currentConversation.messages.forEach(
         message => {

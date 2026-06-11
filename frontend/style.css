@@ -573,3 +573,31 @@ textarea::placeholder{
 
     color:#ef4444;
 }
+
+.empty-state{
+
+    padding:15px;
+
+    text-align:center;
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    border:1px dashed rgba(255,255,255,.08);
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,.02);
+}
+
+.hero-hint{
+
+    margin-top:25px;
+
+    color:var(--muted);
+
+    line-height:1.8;
+
+    font-size:14px;
+}
