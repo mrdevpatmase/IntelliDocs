@@ -1,6 +1,5 @@
-from fileinput import filename
-from multiprocessing import context
-from flask import send_from_directory
+
+from flask import send_from_directory, make_response
 from flask_cors import CORS
 from services.llm import generate_answer
 from services.embeddings import (
@@ -12,7 +11,6 @@ from services.retriever import (
     save_index,
     load_index,
     search_chunks,
-    get_relevant_chunks,
     create_faiss_index
 )
 from services.chunker import chunk_text
@@ -20,10 +18,32 @@ from services.pdf_processor import extract_text_from_pdf
 
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
+import json
 import os
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
+
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+)
+
 
 app = Flask(__name__)
 CORS(app)
+
+app.config["JWT_SECRET_KEY"] = os.getenv(
+    "JWT_SECRET_KEY",
+    "super-secret-key-change-in-production"
+)
+
+jwt = JWTManager(app)
+
 
 loaded = load_index()
 print("Index loaded:", loaded)
@@ -46,7 +66,9 @@ def home():
     return "IntelliDocs Backend Running"
 
 
+
 @app.route("/upload", methods=["POST"])
+@jwt_required()
 def upload_pdf():
 
     if "file" not in request.files:
@@ -99,15 +121,12 @@ def upload_pdf():
 
 
 @app.route("/ask", methods=["POST"])
+@jwt_required()
 def ask_question():
 
     data = request.get_json()
 
     question = data.get("question")
-
-    elected_document = data.get(
-    "document"
-)
 
     if not question:
         return jsonify({
@@ -219,6 +238,7 @@ def ask_question():
 import services.retriever as retriever
 
 @app.route("/documents", methods=["GET"])
+@jwt_required()
 def list_documents():
 
     unique_docs = list({
@@ -231,8 +251,8 @@ def list_documents():
         "total_documents": len(unique_docs)
     })
 
-
 @app.route("/delete-document", methods=["POST"])
+@jwt_required()
 def delete_document():
 
     data = request.get_json()
@@ -263,10 +283,8 @@ def delete_document():
     })
 
 
-from flask import send_from_directory, make_response
-
-
 @app.route("/pdf/<filename>")
+@jwt_required()
 def serve_pdf(filename):
 
     response = make_response(
@@ -284,6 +302,111 @@ def serve_pdf(filename):
     response.headers["Access-Control-Allow-Origin"] = "*"
 
     return response
+
+
+@app.route("/register", methods=["POST"])
+def register():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "Invalid JSON"
+        }), 400
+
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+
+        return jsonify({
+            "error": "Username and password required"
+        }), 400
+
+    if not os.path.exists("users.json"):
+
+        with open("users.json", "w") as f:
+            json.dump([], f)
+
+    with open("users.json", "r") as f:
+        users = json.load(f)
+
+    existing_user = next(
+        (
+            user for user in users
+            if user["username"] == username
+        ),
+        None
+    )
+
+    if existing_user:
+
+        return jsonify({
+            "error": "User already exists"
+        }), 400
+
+    users.append({
+        "username": username,
+        "password": generate_password_hash(password)
+    })
+
+    with open("users.json", "w") as f:
+        json.dump(users, f, indent=4)
+
+    return jsonify({
+        "message": "User registered successfully"
+    }), 201
+
+
+
+@app.route("/login", methods=["POST"])
+def login():
+
+    data = request.json
+
+    username = data.get("username")
+    password = data.get("password")
+
+    if not os.path.exists("users.json"):
+
+        return jsonify({
+            "error": "No users found"
+        }), 404
+
+    with open("users.json", "r") as f:
+        users = json.load(f)
+
+    user = next(
+        (
+            user for user in users
+            if user["username"] == username
+        ),
+        None
+    )
+
+    if not user:
+
+        return jsonify({
+            "error": "Invalid username or password"
+        }), 401
+
+    if not check_password_hash(
+        user["password"],
+        password
+    ):
+
+        return jsonify({
+            "error": "Invalid username or password"
+        }), 401
+
+    token = create_access_token(
+        identity=username
+    )
+
+    return jsonify({
+        "token": token,
+        "username": username
+    }), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
