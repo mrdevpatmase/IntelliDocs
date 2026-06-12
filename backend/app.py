@@ -1,4 +1,4 @@
-
+from flask_jwt_extended import get_jwt_identity
 from flask import send_from_directory, make_response
 from flask_cors import CORS
 from services.llm import generate_answer
@@ -82,7 +82,13 @@ def upload_pdf():
     if not file.filename.lower().endswith(".pdf"):
         return jsonify({"error": "Only PDF files are allowed"}), 400
 
-    filename = secure_filename(file.filename)
+    username = get_jwt_identity()
+
+    original_filename = secure_filename(
+        file.filename
+    )
+
+    filename = f"{username}_{original_filename}"
 
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -98,8 +104,12 @@ def upload_pdf():
     chunks = chunk_text(pages)
 
     # Add document name
+
+    username = get_jwt_identity()
+
     for chunk in chunks:
         chunk["document"] = filename
+        chunk["owner"] = username
 
 
     embeddings = create_embeddings(chunks)
@@ -128,6 +138,8 @@ def ask_question():
 
     question = data.get("question")
     selected_document = data.get("document")
+    username = get_jwt_identity()
+
     print("Selected Document:", selected_document)
 
     if not question:
@@ -135,7 +147,9 @@ def ask_question():
             "error": "Question is required"
         }), 400
 
-    query_embedding = create_query_embedding(question)
+    query_embedding = create_query_embedding(
+        question
+    )
 
     distances, indices = search_chunks(
         query_embedding
@@ -143,9 +157,22 @@ def ask_question():
 
     print("\n===== SEARCH RESULTS =====")
 
+    chunks = []
+
     for d, idx in zip(distances, indices):
 
         chunk = retriever.stored_chunks[idx]
+
+        # User isolation
+        if chunk.get("owner") != username:
+            continue
+
+        # PDF filter
+        if (
+            selected_document and
+            chunk["document"] != selected_document
+        ):
+            continue
 
         print(
             f"Distance: {d:.4f}"
@@ -165,35 +192,21 @@ def ask_question():
 
         print("-" * 50)
 
-
-    chunks = []
-
-    chunks = []
-
-    for d, idx in zip(distances, indices):
-
-        chunk = retriever.stored_chunks[idx]
-
-        # Filter by selected PDF
-        if selected_document and \
-        chunk["document"] != selected_document:
-            continue
-
         if d < 1.15:
             chunks.append(chunk)
 
-        chunks = chunks[:3]
+    chunks = chunks[:3]
 
     context = ""
 
     for chunk in chunks:
 
         context += f"""
-    Document: {chunk['document']}
-    Page: {chunk['page']}
+Document: {chunk['document']}
+Page: {chunk['page']}
 
-    {chunk['text']}
-    """
+{chunk['text']}
+"""
 
     print("\nQUESTION:")
     print(question)
@@ -250,9 +263,12 @@ import services.retriever as retriever
 @jwt_required()
 def list_documents():
 
+    username = get_jwt_identity()
+
     unique_docs = list({
         chunk["document"]
         for chunk in retriever.stored_chunks
+        if chunk.get("owner") == username
     })
 
     return jsonify({
@@ -293,7 +309,6 @@ def delete_document():
 
 
 @app.route("/pdf/<filename>")
-@jwt_required()
 def serve_pdf(filename):
 
     response = make_response(
