@@ -42,6 +42,18 @@ document.getElementById(
     "newChatBtn"
 )
 
+function logout(){
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+
+    conversations = [];
+    currentConversation = null;
+
+    window.location.href =
+        "login.html";
+
+}
 
 function getAuthHeaders() {
 
@@ -798,19 +810,25 @@ document
 
 function saveConversations(){
 
-    localStorage.setItem(
-        "intellidocs_conversations",
-        JSON.stringify(conversations)
-    );
+    const username =
+    localStorage.getItem("username");
+
+localStorage.setItem(
+    `intellidocs_conversations_${username}`,
+    JSON.stringify(conversations)
+);
 
 }
 
 function loadConversations(){
 
+    const username =
+    localStorage.getItem("username");
+
     const saved =
-        localStorage.getItem(
-            "intellidocs_conversations"
-        );
+    localStorage.getItem(
+        `intellidocs_conversations_${username}`
+    );
 
     if(saved){
 

@@ -89,3 +89,14 @@ tmp/
 temp/
 *.tmp
 index.faiss
+venv/
+__pycache__/
+
+.env
+
+uploads/
+
+vector_store/
+
+users.json
+
