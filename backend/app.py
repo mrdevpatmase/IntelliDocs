@@ -32,10 +32,23 @@ from flask_jwt_extended import (
     create_access_token,
     jwt_required,
 )
+from services.models import User
+from dotenv import load_dotenv
+from services.database import db
+
+load_dotenv()
 
 
 app = Flask(__name__)
 CORS(app)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL"
+)
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db.init_app(app)
 
 app.config["JWT_SECRET_KEY"] = os.getenv(
     "JWT_SECRET_KEY",
@@ -333,11 +346,6 @@ def register():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({
-            "error": "Invalid JSON"
-        }), 400
-
     username = data.get("username")
     password = data.get("password")
 
@@ -347,21 +355,9 @@ def register():
             "error": "Username and password required"
         }), 400
 
-    if not os.path.exists("users.json"):
-
-        with open("users.json", "w") as f:
-            json.dump([], f)
-
-    with open("users.json", "r") as f:
-        users = json.load(f)
-
-    existing_user = next(
-        (
-            user for user in users
-            if user["username"] == username
-        ),
-        None
-    )
+    existing_user = User.query.filter_by(
+        username=username
+    ).first()
 
     if existing_user:
 
@@ -369,13 +365,13 @@ def register():
             "error": "User already exists"
         }), 400
 
-    users.append({
-        "username": username,
-        "password": generate_password_hash(password)
-    })
+    new_user = User(
+        username=username,
+        password=generate_password_hash(password)
+    )
 
-    with open("users.json", "w") as f:
-        json.dump(users, f, indent=4)
+    db.session.add(new_user)
+    db.session.commit()
 
     return jsonify({
         "message": "User registered successfully"
@@ -386,27 +382,14 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
 
-    data = request.json
+    data = request.get_json()
 
     username = data.get("username")
     password = data.get("password")
 
-    if not os.path.exists("users.json"):
-
-        return jsonify({
-            "error": "No users found"
-        }), 404
-
-    with open("users.json", "r") as f:
-        users = json.load(f)
-
-    user = next(
-        (
-            user for user in users
-            if user["username"] == username
-        ),
-        None
-    )
+    user = User.query.filter_by(
+        username=username
+    ).first()
 
     if not user:
 
@@ -415,7 +398,7 @@ def login():
         }), 401
 
     if not check_password_hash(
-        user["password"],
+        user.password,
         password
     ):
 
@@ -431,6 +414,9 @@ def login():
         "token": token,
         "username": username
     }), 200
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
