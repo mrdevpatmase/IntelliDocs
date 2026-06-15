@@ -601,3 +601,42 @@ textarea::placeholder{
 
     font-size:14px;
 }
+
+:root{
+    --bg:#080c18;
+    --sidebar:#0c1120;
+    --card:#111827;
+
+    --violet:#0d9488;
+    --violet-mid:#14b8a6;
+    --violet-soft:rgba(13,148,136,.12);
+    --violet-glow:rgba(13,148,136,.35);
+
+    --rose:#f472b6;
+
+    --text:#eef2ff;
+    --muted:#7c87a0;
+
+    --border:rgba(255,255,255,.07);
+}
+
+#logoutBtn{
+    width:100%;
+    padding:11px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    background:linear-gradient(135deg,#e11d48,#f43f5e);
+    color:#fff;
+    transition:.3s;
+    margin-bottom:10px;
+    box-shadow:0 0 10px rgba(225,29,72,.15);
+}
+
+#logoutBtn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 20px rgba(225,29,72,.35);
+}
