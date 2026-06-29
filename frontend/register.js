@@ -38,7 +38,7 @@ async function register() {
 
     const response =
         await fetch(
-            `${API_URL}/register`,
+            `/register`,
             {
                 method:"POST",
 

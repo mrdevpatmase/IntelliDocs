@@ -72,7 +72,7 @@ async function loadDocuments() {
     try {
 
         const response = await fetch(
-            `${API_URL}/documents`,
+            `/documents`,
             {
                 headers:{
                     "Authorization":
@@ -210,7 +210,7 @@ async function uploadPDF() {
 
         const response =
             await fetch(
-                `${API_URL}/upload`,
+                `/upload`,
                 {
                     method:"POST",
                     headers:{
@@ -263,7 +263,7 @@ async function deleteDocument(document){
 
         const response =
             await fetch(
-                `${API_URL}/delete-document`,
+                `/delete-document`,
                 {
                     method:"POST",
 
@@ -581,7 +581,7 @@ async function askQuestion(){
 
         const response =
             await fetch(
-                `${API_URL}/ask`,
+                `/ask`,
                 {
                     method:"POST",
                     headers:getAuthHeaders(),
@@ -739,7 +739,7 @@ function previewPDF(
     setTimeout(() => {
 
         viewer.src =
-            `${API_URL}/pdf/${encodeURIComponent(fileName)}?t=${Date.now()}#page=${page}`;
+            `/pdf/${encodeURIComponent(fileName)}?t=${Date.now()}#page=${page}`;
 
     }, 100);
 
