@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask_jwt_extended import get_jwt_identity
 from flask import send_from_directory, make_response
 from flask_cors import CORS
@@ -26,7 +30,6 @@ from werkzeug.security import (
     check_password_hash
 )
 
-
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -36,7 +39,12 @@ from services.models import User
 from dotenv import load_dotenv
 from services.database import db
 
-load_dotenv()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_FOLDER = os.path.join(
+    os.path.dirname(BASE_DIR),
+    "frontend"
+)
+
 
 
 app = Flask(__name__)
@@ -76,9 +84,17 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/")
 def home():
-    return "IntelliDocs Backend Running"
+    return send_from_directory(
+        FRONTEND_FOLDER,
+        "index.html"
+    )
 
-
+@app.route("/<path:filename>")
+def frontend_files(filename):
+    return send_from_directory(
+        FRONTEND_FOLDER,
+        filename
+    )
 
 @app.route("/upload", methods=["POST"])
 @jwt_required()
