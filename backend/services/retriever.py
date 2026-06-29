@@ -208,7 +208,3 @@ def delete_document(document_name):
     )
 
     save_index()
-
-
-
-    
