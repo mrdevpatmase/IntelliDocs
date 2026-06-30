@@ -102,6 +102,8 @@ def frontend_files(filename):
 @jwt_required()
 def upload_pdf():
 
+    print("STEP 1: Upload request received")
+
     if "file" not in request.files:
         return jsonify({"error": "No file provided"}), 400
 
@@ -115,10 +117,7 @@ def upload_pdf():
 
     username = get_jwt_identity()
 
-    original_filename = secure_filename(
-        file.filename
-    )
-
+    original_filename = secure_filename(file.filename)
     filename = f"{username}_{original_filename}"
 
     filepath = os.path.join(
@@ -127,30 +126,30 @@ def upload_pdf():
     )
 
     file.save(filepath)
+    print("STEP 2: File saved")
 
-    # Page-aware extraction
     pages = extract_text_from_pdf(filepath)
+    print(f"STEP 3: PDF extracted ({len(pages)} pages)")
 
-    # Metadata-aware chunking
     chunks = chunk_text(pages)
-
-    # Add document name
-
-    username = get_jwt_identity()
+    print(f"STEP 4: Created {len(chunks)} chunks")
 
     for chunk in chunks:
         chunk["document"] = filename
         chunk["owner"] = username
 
-
+    print("STEP 5: Starting embedding generation...")
     embeddings = create_embeddings(chunks)
+    print("STEP 6: Embeddings created")
 
     create_faiss_index(
         embeddings,
         chunks
     )
+    print("STEP 7: FAISS index created")
 
     save_index()
+    print("STEP 8: Index saved")
 
     return jsonify({
         "message": "PDF uploaded successfully",
