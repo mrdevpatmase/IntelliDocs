@@ -1,29 +1,50 @@
-from sentence_transformers import SentenceTransformer
+import os
+import numpy as np
+import requests
 
-print("Loading SentenceTransformer...")
-model = SentenceTransformer("all-MiniLM-L6-v2")
-print("Model loaded successfully.")
+JINA_API_KEY = os.getenv("JINA_API_KEY")
+
+JINA_URL = "https://api.jina.ai/v1/embeddings"
+
+HEADERS = {
+    "Authorization": f"Bearer {JINA_API_KEY}",
+    "Content-Type": "application/json"
+}
+
+
+def _embed(texts):
+    response = requests.post(
+        JINA_URL,
+        headers=HEADERS,
+        json={
+            "model": "jina-embeddings-v3",
+            "input": texts
+        },
+        timeout=60
+    )
+
+    response.raise_for_status()
+
+    data = response.json()["data"]
+
+    return np.array(
+        [item["embedding"] for item in data],
+        dtype=np.float32
+    )
 
 
 def create_query_embedding(query):
-    print("Creating query embedding...")
-    return model.encode(query)
+    return _embed([query])[0]
 
 
 def create_embeddings(chunks):
-    print("create_embeddings() called")
 
     if not chunks:
-        print("No chunks found")
-        return []
+        return np.array([], dtype=np.float32)
 
     if isinstance(chunks[0], dict):
         texts = [chunk["text"] for chunk in chunks]
     else:
         texts = chunks
 
-    print(f"Encoding {len(texts)} chunks...")
-    embeddings = model.encode(texts)
-    print("Embeddings created.")
-
-    return embeddings
+    return _embed(texts)
