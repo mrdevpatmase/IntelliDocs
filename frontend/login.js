@@ -21,7 +21,7 @@ async function login() {
 
     const response =
         await fetch(
-            `${API_URL}/login`,
+            `/login`,
             {
                 method:"POST",
 

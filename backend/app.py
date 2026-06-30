@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask_jwt_extended import get_jwt_identity
 from flask import send_from_directory, make_response
 from flask_cors import CORS
@@ -21,11 +25,12 @@ from werkzeug.utils import secure_filename
 import json
 import os
 
+
+
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
-
 
 from flask_jwt_extended import (
     JWTManager,
@@ -36,7 +41,12 @@ from services.models import User
 from dotenv import load_dotenv
 from services.database import db
 
-load_dotenv()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_FOLDER = os.path.join(
+    os.path.dirname(BASE_DIR),
+    "frontend"
+)
+
 
 
 app = Flask(__name__)
@@ -76,71 +86,86 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/")
 def home():
-    return "IntelliDocs Backend Running"
+    return send_from_directory(
+        FRONTEND_FOLDER,
+        "index.html"
+    )
 
-
+@app.route("/<path:filename>")
+def frontend_files(filename):
+    return send_from_directory(
+        FRONTEND_FOLDER,
+        filename
+    )
 
 @app.route("/upload", methods=["POST"])
 @jwt_required()
 def upload_pdf():
+    try:
+        print("STEP 1: Upload request received")
 
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        if "file" not in request.files:
+            return jsonify({"error": "No file provided"}), 400
 
-    file = request.files["file"]
+        file = request.files["file"]
 
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        if file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
 
-    if not file.filename.lower().endswith(".pdf"):
-        return jsonify({"error": "Only PDF files are allowed"}), 400
+        if not file.filename.lower().endswith(".pdf"):
+            return jsonify({"error": "Only PDF files are allowed"}), 400
 
-    username = get_jwt_identity()
+        username = get_jwt_identity()
 
-    original_filename = secure_filename(
-        file.filename
-    )
+        original_filename = secure_filename(file.filename)
+        filename = f"{username}_{original_filename}"
 
-    filename = f"{username}_{original_filename}"
+        filepath = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
 
-    filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        filename
-    )
+        file.save(filepath)
+        print("STEP 2: File saved")
 
-    file.save(filepath)
+        pages = extract_text_from_pdf(filepath)
+        print(f"STEP 3: PDF extracted ({len(pages)} pages)")
 
-    # Page-aware extraction
-    pages = extract_text_from_pdf(filepath)
+        chunks = chunk_text(pages)
+        print(f"STEP 4: Created {len(chunks)} chunks")
 
-    # Metadata-aware chunking
-    chunks = chunk_text(pages)
+        for chunk in chunks:
+            chunk["document"] = filename
+            chunk["owner"] = username
 
-    # Add document name
+        print("STEP 5: Starting embedding generation...")
+        embeddings = create_embeddings(chunks)
+        print("STEP 6: Embeddings created")
 
-    username = get_jwt_identity()
+        create_faiss_index(embeddings, chunks)
+        print("STEP 7: FAISS index created")
 
-    for chunk in chunks:
-        chunk["document"] = filename
-        chunk["owner"] = username
+        save_index()
+        print("STEP 8: Index saved")
 
+        return jsonify({
+            "message": "PDF uploaded successfully",
+            "document": filename,
+            "total_chunks": len(chunks),
+            "embedding_shape": list(embeddings.shape),
+            "faiss_vectors": retriever.index.ntotal
+        })
 
-    embeddings = create_embeddings(chunks)
+    except Exception as e:
+        import traceback
+        print("=" * 60)
+        print("UPLOAD ERROR")
+        traceback.print_exc()
+        print("=" * 60)
 
-    create_faiss_index(
-        embeddings,
-        chunks
-    )
-
-    save_index()
-
-    return jsonify({
-        "message": "PDF uploaded successfully",
-        "document": filename,
-        "total_chunks": len(chunks),
-        "embedding_shape": list(embeddings.shape),
-        "faiss_vectors": retriever.index.ntotal
-    })
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @app.route("/ask", methods=["POST"])

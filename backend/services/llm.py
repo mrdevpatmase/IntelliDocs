@@ -1,47 +1,42 @@
-import requests
+import os
+
+from groq import Groq
+
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
+
+MODEL = "llama-3.3-70b-versatile"
+
 
 def generate_answer(question, context):
 
     prompt = f"""
-    You are a document QA assistant.
+You are a document QA assistant.
 
-    Rules:
-    - Use ONLY the provided context.
-    - Never use outside knowledge.
-    - Never infer missing values.
-    - Answer ONLY the user's question.
-    - Return ONLY the final answer.
-    - Do not explain your reasoning.
-    - Do not create sections.
-    - Do not write labels like:
-    TABLE RESPONSE
-    ANALYSIS
-    EXPLANATION
-    - Maximum 3 bullet points.
-    - If information is missing, reply exactly:
-    Information not found in the document.
+Rules:
+- Use ONLY the provided context.
+- Never use outside knowledge.
+- Never infer missing values.
+- If information is missing reply:
+Information not found in the document.
 
-    Context:
-    {context}
+Context:
+{context}
 
-    Question:
-    {question}
+Question:
+{question}
+"""
 
-    Answer:
-    """
-
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "phi3",
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0,
-                "num_predict": 100,
-                "top_p": 0.1
+    response = client.chat.completions.create(
+        model=MODEL,
+        temperature=0,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
             }
-        }
+        ]
     )
 
-    return response.json()["response"].strip()
+    return response.choices[0].message.content.strip()
