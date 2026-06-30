@@ -101,63 +101,71 @@ def frontend_files(filename):
 @app.route("/upload", methods=["POST"])
 @jwt_required()
 def upload_pdf():
+    try:
+        print("STEP 1: Upload request received")
 
-    print("STEP 1: Upload request received")
+        if "file" not in request.files:
+            return jsonify({"error": "No file provided"}), 400
 
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        file = request.files["file"]
 
-    file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
 
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        if not file.filename.lower().endswith(".pdf"):
+            return jsonify({"error": "Only PDF files are allowed"}), 400
 
-    if not file.filename.lower().endswith(".pdf"):
-        return jsonify({"error": "Only PDF files are allowed"}), 400
+        username = get_jwt_identity()
 
-    username = get_jwt_identity()
+        original_filename = secure_filename(file.filename)
+        filename = f"{username}_{original_filename}"
 
-    original_filename = secure_filename(file.filename)
-    filename = f"{username}_{original_filename}"
+        filepath = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
 
-    filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        filename
-    )
+        file.save(filepath)
+        print("STEP 2: File saved")
 
-    file.save(filepath)
-    print("STEP 2: File saved")
+        pages = extract_text_from_pdf(filepath)
+        print(f"STEP 3: PDF extracted ({len(pages)} pages)")
 
-    pages = extract_text_from_pdf(filepath)
-    print(f"STEP 3: PDF extracted ({len(pages)} pages)")
+        chunks = chunk_text(pages)
+        print(f"STEP 4: Created {len(chunks)} chunks")
 
-    chunks = chunk_text(pages)
-    print(f"STEP 4: Created {len(chunks)} chunks")
+        for chunk in chunks:
+            chunk["document"] = filename
+            chunk["owner"] = username
 
-    for chunk in chunks:
-        chunk["document"] = filename
-        chunk["owner"] = username
+        print("STEP 5: Starting embedding generation...")
+        embeddings = create_embeddings(chunks)
+        print("STEP 6: Embeddings created")
 
-    print("STEP 5: Starting embedding generation...")
-    embeddings = create_embeddings(chunks)
-    print("STEP 6: Embeddings created")
+        create_faiss_index(embeddings, chunks)
+        print("STEP 7: FAISS index created")
 
-    create_faiss_index(
-        embeddings,
-        chunks
-    )
-    print("STEP 7: FAISS index created")
+        save_index()
+        print("STEP 8: Index saved")
 
-    save_index()
-    print("STEP 8: Index saved")
+        return jsonify({
+            "message": "PDF uploaded successfully",
+            "document": filename,
+            "total_chunks": len(chunks),
+            "embedding_shape": list(embeddings.shape),
+            "faiss_vectors": retriever.index.ntotal
+        })
 
-    return jsonify({
-        "message": "PDF uploaded successfully",
-        "document": filename,
-        "total_chunks": len(chunks),
-        "embedding_shape": list(embeddings.shape),
-        "faiss_vectors": retriever.index.ntotal
-    })
+    except Exception as e:
+        import traceback
+        print("=" * 60)
+        print("UPLOAD ERROR")
+        traceback.print_exc()
+        print("=" * 60)
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @app.route("/ask", methods=["POST"])
