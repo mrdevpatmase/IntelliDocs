@@ -206,40 +206,34 @@ async function uploadPDF() {
         file
     );
 
-    try{
+try {
 
-        const response =
-            await fetch(
-                `/upload`,
-                {
-                    method:"POST",
-                    headers:{
-                        "Authorization":
-                        `Bearer ${localStorage.getItem("token")}`
-                    },
-                    body:formData
-                }
-            )
+    const response = await fetch("/upload", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: formData
+    });
 
-        const data =
-            await response.json();
+    const data = await response.json();
 
-        console.log(
-            `${data.document} uploaded successfully`
-        );
-
-        loadDocuments();
-
+    if (!response.ok) {
+        console.error(data);
+        alert(data.error || "Upload failed");
+        return;
     }
 
-    catch(error){
+    console.log("Upload successful:", data);
 
-        console.error(
-            "Upload Error:",
-            error
-        );
+    alert("PDF uploaded successfully");
 
-    }
+    loadDocuments();
+
+}
+catch (error) {
+    console.error(error);
+}
 
 }
 
